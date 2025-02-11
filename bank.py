@@ -3,11 +3,11 @@ import sqlite3
 import qrcode
 import os
 
-# Ensure the 'qr' directory exists for storing QR codes
+
 if not os.path.exists('qr'):
     os.makedirs('qr')
 
-# Initialize the database and tables if they do not exist
+
 def init_db():
     con = sqlite3.connect("banking_app.sqlite")
     cur = con.cursor()
@@ -22,7 +22,7 @@ def init_db():
     con.commit()
     con.close()
 
-# Function to generate and save a QR code for the account
+
 def generate_qr_code(account_number, name, balance):
     qr_data = f"Account Number: {account_number}\nName: {name}\nBalance: {balance} Rs."
     qr_img = qrcode.make(qr_data)
@@ -30,7 +30,7 @@ def generate_qr_code(account_number, name, balance):
     qr_img.save(qr_file_path)
     return qr_file_path
 
-# Function to create a new account and store it in the database
+
 def create_account(name, password, initial_balance):
     try:
         con = sqlite3.connect("banking_app.sqlite")
@@ -43,7 +43,7 @@ def create_account(name, password, initial_balance):
         cur.execute("SELECT AccountNumber FROM Accounts WHERE Name = ? AND Password = ?", (name, password))
         account_number = cur.fetchone()[0]
 
-        # Generate and save the QR code for the account
+    
         qr_file_path = generate_qr_code(account_number, name, initial_balance)
 
         st.success(f"Account created successfully! Your account number is {account_number}.")
@@ -54,7 +54,7 @@ def create_account(name, password, initial_balance):
     except Exception as e:
         st.error(f"Error: {e}")
 
-# Function to log into an existing account
+
 def login(account_number, password):
     con = sqlite3.connect("banking_app.sqlite")
     cur = con.cursor()
@@ -63,7 +63,7 @@ def login(account_number, password):
     con.close()
     return account
 
-# Function to withdraw money from an account
+
 def withdraw_money(account_number, amount):
     con = sqlite3.connect("banking_app.sqlite")
     cur = con.cursor()
@@ -81,7 +81,7 @@ def withdraw_money(account_number, amount):
     
     con.close()
 
-# Function to deposit money into an account
+
 def deposit_money(account_number, amount):
     con = sqlite3.connect("banking_app.sqlite")
     cur = con.cursor()
@@ -96,7 +96,7 @@ def deposit_money(account_number, amount):
     st.success(f"Rs.{amount} deposited successfully. New balance: Rs.{new_balance}")
     con.close()
 
-# Function to check account balance
+
 def check_balance(account_number):
     con = sqlite3.connect("banking_app.sqlite")
     cur = con.cursor()
@@ -107,7 +107,7 @@ def check_balance(account_number):
     st.info(f"Your current balance is Rs.{balance}.")
     con.close()
 
-# Function to get account details by account number
+
 def get_account_details(account_number):
     con = sqlite3.connect("banking_app.sqlite")
     cur = con.cursor()
@@ -118,15 +118,15 @@ def get_account_details(account_number):
     con.close()
     return account_info
 
-# Initialize the database
+
 init_db()
 
-# Streamlit App UI
+
 st.set_page_config(page_title="IINO - Banking App", page_icon="💰")
 
 st.title("IINO - Your Personal Banking System")
 
-# Account creation and login options
+
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'current_ac_no' not in st.session_state:
@@ -135,7 +135,7 @@ if 'current_ac_no' not in st.session_state:
 if not st.session_state.logged_in:
     st.subheader("Create an Account or Login")
 
-    # Create account section
+
     with st.expander("Create New Account"):
         name = st.text_input("Name", key="create_name")
         password = st.text_input("Password", type="password", key="create_password")
@@ -147,7 +147,7 @@ if not st.session_state.logged_in:
             else:
                 st.error("Please fill in all fields.")
 
-    # Login section
+
     with st.expander("Login to Your Account"):
         account_number = st.text_input("Account Number", key="login_acno")
         password = st.text_input("Password", type="password", key="login_password")
@@ -164,41 +164,41 @@ if not st.session_state.logged_in:
             else:
                 st.error("Please enter valid account details.")
 else:
-    # Get and display account holder's information
+  
     account_info = get_account_details(st.session_state.current_ac_no)
     if account_info:
         st.subheader(f"Account Holder: {account_info[0]}")
         st.subheader(f"Account Number: {st.session_state.current_ac_no}")
         st.subheader(f"Current Balance: Rs.{account_info[1]}")
 
-        # Display the QR code associated with the account
+    
         qr_file_path = f"qr/account_{st.session_state.current_ac_no}.png"
         if os.path.exists(qr_file_path):
             st.image(qr_file_path, caption="Your Account QR Code", use_column_width=True)
         else:
             st.error("QR code not found for this account.")
 
-    # Show the banking options after login
+ 
     st.subheader("...BANKING MENU...")
 
-    # Withdraw section
+
     with st.expander("Withdraw Money"):
         withdraw_amount = st.number_input("Enter amount to withdraw:", min_value=0, step=1, key="withdraw_amount")
         if st.button("Withdraw", key="withdraw_button"):
             withdraw_money(st.session_state.current_ac_no, withdraw_amount)
 
-    # Deposit section
+
     with st.expander("Deposit Money"):
         deposit_amount = st.number_input("Enter amount to deposit:", min_value=0, step=1, key="deposit_amount")
         if st.button("Deposit", key="deposit_button"):
             deposit_money(st.session_state.current_ac_no, deposit_amount)
 
-    # Check balance section
+
     with st.expander("Check Balance"):
         if st.button("Check Balance", key="check_balance_button"):
             check_balance(st.session_state.current_ac_no)
 
-    # Logout option
+
     if st.button("Logout", key="logout_button"):
         st.session_state.logged_in = False
         st.session_state.current_ac_no = None
